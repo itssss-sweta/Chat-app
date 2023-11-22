@@ -1,6 +1,9 @@
 import 'dart:developer';
+import 'package:chat_app/config/routes/approute.dart';
+import 'package:chat_app/core/constants/key.dart';
 import 'package:chat_app/features/authentication/presentation/bloc/cubit/otp_cubit_cubit.dart';
-import 'package:chat_app/features/homepag/presentation/ui/chatpage.dart';
+import 'package:chat_app/features/homepage/presentation/cubit/cubit/homepage_cubit_cubit.dart';
+import 'package:chat_app/features/homepage/presentation/ui/homepage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,10 +37,15 @@ class ChatApp extends StatelessWidget {
       providers: [
         BlocProvider<OtpCubitCubit>(
           create: (context) => OtpCubitCubit(),
+        ),
+        BlocProvider<HomepageCubitCubit>(
+          create: (context) => HomepageCubitCubit(),
         )
       ],
-      child: const MaterialApp(
-        home: ChatPage(),
+      child: MaterialApp(
+        onGenerateRoute: AppRoute().ongenerateRoute,
+        home: const HomePage(arg: [false, false, '', '']),
+        navigatorKey: navigatorKey,
       ),
     );
   }

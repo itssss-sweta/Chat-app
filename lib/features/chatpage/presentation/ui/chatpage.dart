@@ -1,20 +1,24 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:chat_app/features/chatpage/presentation/ui/components/navbarcontainer.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
-class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+class ChatPage extends StatefulWidget {
+  const ChatPage({super.key});
 
   @override
-  State<ChatScreen> createState() => _ChatScreenState();
+  State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatPageState extends State<ChatPage> {
   List<PlatformFile> messages = [];
 
   TextEditingController message = TextEditingController();
+
+  late WebSocketChannel channel;
 
   Future<void> pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -29,18 +33,59 @@ class _ChatScreenState extends State<ChatScreen> {
     log(result?.files.first.toString() ?? '');
     if (result != null) {
       setState(() {
-        messages = result.files;
+        messages.addAll(result.files);
       });
+      if (messages.isNotEmpty && messages.last.path != null) {
+        File imageFile = File(messages.last.path!);
+        List<int> imageBytes = await imageFile.readAsBytes();
+
+        // Encode the image bytes to base64
+        String base64Image = base64Encode(imageBytes);
+        log(base64Image);
+
+        // Send the base64-encoded image data
+        channel.sink.add(base64Image);
+      }
     }
   }
 
-  void sendMessage() {
+  void sendMessage() async {
     if (message.text.isNotEmpty) {
+      log(message.text);
+      channel.sink.add(message.text);
       setState(() {
         messages.add(PlatformFile(name: message.text, size: 1));
-        message.clear();
       });
+
+      message.clear();
     }
+    // else {
+    //   if (messages.isNotEmpty && messages.last.path != null) {
+    //     File imageFile = File(messages.last.path!);
+    //     List<int> imageBytes = await imageFile.readAsBytes();
+
+    //     // Encode the image bytes to base64
+    //     String base64Image = base64Encode(imageBytes);
+    //     log(base64Image);
+
+    //     // Send the base64-encoded image data
+    //     channel.sink.add(base64Image);
+    //   }
+    // }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    channel = WebSocketChannel.connect(
+        Uri.parse('wss://socketsbay.com/wss/v2/1/demo/'));
+  }
+
+  @override
+  void dispose() {
+    channel.sink.close();
+    message.dispose();
+    super.dispose();
   }
 
   @override
@@ -53,74 +98,96 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: SizedBox(
         height: MediaQuery.sizeOf(context).height - 150,
-        child: ListView.builder(
-          physics: const BouncingScrollPhysics(),
-          itemCount: messages.length,
-          itemBuilder: (context, index) {
-            String fileExtension = messages[index].name.toLowerCase();
-            log(messages[index].bytes.toString());
-            if (fileExtension.endsWith('.jpg') ||
-                fileExtension.endsWith('.jpeg') ||
-                fileExtension.endsWith('.png')) {
-              // Display text message
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(10),
+        child: StreamBuilder(
+          stream: channel.stream,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              log(snapshot.data);
+              var start = snapshot.data.toString().startsWith('{');
+              var end = snapshot.data.toString().endsWith('}');
+              if (!start && !end) {
+                messages.add(PlatformFile(name: snapshot.data, size: 1));
+              }
+              // }
+            }
+            return ListView.builder(
+              physics: const BouncingScrollPhysics(),
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                String currentMessage = messages[index].name;
+                String fileExtension = messages[index].name.toLowerCase();
+
+                if (fileExtension.endsWith('.jpg') ||
+                    fileExtension.endsWith('.jpeg') ||
+                    fileExtension.endsWith('.png')) {
+                  // Display text message
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        // child: Text(messages[index].path ?? ''),
+                        child: (messages[index].path != null)
+                            ? Image.file(
+                                File(
+                                  messages[index].path ?? '',
+                                ),
+                                height: 200,
+                              )
+                            : null),
+                  );
+                }
+                //  else if (fileExtension.endsWith('.mp4') ||
+                //     fileExtension.endsWith('.mov') ||
+                //     fileExtension.endsWith('.avi')) {
+                //   // Display video file
+                //   return Padding(
+                //       padding: const EdgeInsets.all(8.0),
+                //       child: Container(
+                //         decoration: BoxDecoration(
+                //           color: Colors.grey.shade300,
+                //           borderRadius: BorderRadius.circular(10),
+                //         ),
+                //         padding: const EdgeInsets.all(16),
+                //         child: AspectRatio(
+                //           aspectRatio: 16 /
+                //               9, // You may need to adjust this based on your videos
+                //           child: VideoPlayer(
+                //             VideoPlayerController.file(
+                //                 File(messages[index].path!)),
+                //           ),
+                //         ),
+                //       ));
+                // }
+                else {
+                  // Display file message
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Text(currentMessage),
+                      // child: (messages.first.bytes != null)
+                      //     ? Image.memory(messages.first.bytes!)
+                      //     : null,
+                      // child: StreamBuilder(
+                      //   stream: channel.stream,
+                      //   builder: (context, snapshot) {
+                      //     // log(snapshot.data);
+                      //     return Text(snapshot.hasData ? '${snapshot.data}' : '');
+                      //   },
+                      // ),
                     ),
-                    padding: const EdgeInsets.all(16),
-                    // child: Text(messages[index].path ?? ''),
-                    child: (messages[index].path != null)
-                        ? Image.file(
-                            File(
-                              messages[index].path ?? '',
-                            ),
-                            height: 200,
-                          )
-                        : null),
-              );
-            }
-            //  else if (fileExtension.endsWith('.mp4') ||
-            //     fileExtension.endsWith('.mov') ||
-            //     fileExtension.endsWith('.avi')) {
-            //   // Display video file
-            //   return Padding(
-            //       padding: const EdgeInsets.all(8.0),
-            //       child: Container(
-            //         decoration: BoxDecoration(
-            //           color: Colors.grey.shade300,
-            //           borderRadius: BorderRadius.circular(10),
-            //         ),
-            //         padding: const EdgeInsets.all(16),
-            //         child: AspectRatio(
-            //           aspectRatio: 16 /
-            //               9, // You may need to adjust this based on your videos
-            //           child: VideoPlayer(
-            //             VideoPlayerController.file(
-            //                 File(messages[index].path!)),
-            //           ),
-            //         ),
-            //       ));
-            // }
-            else {
-              // Display file message
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Text(messages[index].name),
-                  // child: (messages.first.bytes != null)
-                  //     ? Image.memory(messages.first.bytes!)
-                  //     : null,
-                ),
-              );
-            }
+                  );
+                }
+              },
+            );
           },
         ),
       ),
@@ -136,10 +203,7 @@ class _ChatScreenState extends State<ChatScreen> {
           border: Border.all(
             color: Colors.green.shade400,
           ),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
+          borderRadius: const BorderRadius.all(Radius.circular(20)),
         ),
         child: Row(
           children: [
@@ -173,6 +237,15 @@ class _ChatScreenState extends State<ChatScreen> {
               icon: Icons.send_outlined,
               onTap: () {
                 sendMessage();
+                // String sentMessage = 'Sent:${message.text}';
+                // if (message.text.isNotEmpty) {
+                //   log(message.text);
+                //   channel.sink.add(message.text);
+                //   setState(() {
+                //     messages.add(PlatformFile(name: message.text, size: 1));
+                //   });
+                //   message.clear();
+                // }
               },
             ),
           ],

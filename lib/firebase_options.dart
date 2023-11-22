@@ -23,15 +23,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for windows - '
@@ -65,5 +59,23 @@ class DefaultFirebaseOptions {
     messagingSenderId: '480016799711',
     projectId: 'test123-d530a',
     storageBucket: 'test123-d530a.appspot.com',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyBocNmu5Nt5cR9XM5mkbB9vry5TnQhySWY',
+    appId: '1:480016799711:ios:87ec4bdd31adbdfb95566a',
+    messagingSenderId: '480016799711',
+    projectId: 'test123-d530a',
+    storageBucket: 'test123-d530a.appspot.com',
+    iosBundleId: 'com.example.chatApp',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyBocNmu5Nt5cR9XM5mkbB9vry5TnQhySWY',
+    appId: '1:480016799711:ios:62c8fc32f432ce3895566a',
+    messagingSenderId: '480016799711',
+    projectId: 'test123-d530a',
+    storageBucket: 'test123-d530a.appspot.com',
+    iosBundleId: 'com.example.chatApp.RunnerTests',
   );
 }

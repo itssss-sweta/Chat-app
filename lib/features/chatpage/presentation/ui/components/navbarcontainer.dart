@@ -15,7 +15,7 @@ class NavBarContainer extends StatelessWidget {
         // log('message');
       },
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.only(left: 20, right: 20),
         clipBehavior: Clip.antiAliasWithSaveLayer,
         decoration: const BoxDecoration(
           border: Border(

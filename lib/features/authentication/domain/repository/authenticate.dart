@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:developer';
+import 'package:chat_app/config/routes/route.dart';
+import 'package:chat_app/core/constants/key.dart';
 import 'package:chat_app/core/utils/snackbar.dart';
 import 'package:chat_app/features/authentication/presentation/bloc/cubit/otp_cubit_cubit.dart';
-import 'package:chat_app/features/homepage/presentation/ui/homepage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,11 +26,8 @@ class Authenticate {
           _auth
               .signInWithCredential(credential)
               .then((UserCredential userCredential) {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const HomePage(),
-                ));
+            navigatorKey.currentState?.pushNamed(Routes.homeScreen,
+                arguments: [false, false, '', '']);
           }).catchError((e) {
             throw (e);
           });
@@ -46,7 +44,7 @@ class Authenticate {
           _verificationId = verificationId;
           _resendToken = resentToken;
           // dialogDisplay(context, credential, verificationId);
-          Navigator.of(context).push(MaterialPageRoute(
+          navigatorKey.currentState?.push(MaterialPageRoute(
             builder: (context) => FutureBuilder(
               future: null,
               builder: (context, snapshot) {
@@ -117,9 +115,9 @@ class OtpVerfication {
       auth
           .signInWithCredential(credential)
           .then((UserCredential userCredential) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
+        navigatorKey.currentState?.pushNamedAndRemoveUntil(
+          Routes.homeScreen,
+          arguments: [false, false, '', ''],
           (route) => false,
         );
       }).catchError((e) {

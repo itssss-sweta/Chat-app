@@ -1,7 +1,8 @@
 import 'dart:developer';
 
+import 'package:chat_app/config/routes/route.dart';
+import 'package:chat_app/core/constants/key.dart';
 import 'package:chat_app/core/utils/snackbar.dart';
-import 'package:chat_app/features/authentication/presentation/ui/otp.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -35,14 +36,12 @@ Future<void> dialogDisplay(BuildContext context, PhoneAuthCredential credential,
                   auth
                       .signInWithCredential(credential)
                       .then((UserCredential userCredential) {
-                    Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const OtpScreen()));
+                    navigatorKey.currentState
+                        ?.pushReplacementNamed(Routes.otpScreen);
                   }).catchError((e) {
                     if (e is FirebaseAuthException) {
                       displaySnackBar(context, content: e.message);
-                      Navigator.of(context).pop();
+                      navigatorKey.currentState?.pop();
                       log(e.message ?? '');
                     }
                     log(e);
