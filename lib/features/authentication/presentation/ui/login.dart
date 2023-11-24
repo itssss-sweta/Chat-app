@@ -4,7 +4,7 @@ import 'package:chat_app/core/constants/colors.dart';
 import 'package:chat_app/core/constants/edgeinset.dart';
 import 'package:chat_app/core/constants/textstyle.dart';
 import 'package:flutter/material.dart';
-import '../../domain/repository/authenticate.dart';
+import '../../data/repository/authenticate.dart';
 import '../../../../core/utils/snackbar.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -44,25 +44,13 @@ class _LoginScreenState extends State<LoginScreen> {
             onTap: () async {
               log('tapped');
               if ((_phone.text).isEmpty) {
-                displaySnackBar(context,
+                displaySnackBar(
                     content: 'Please enter your number', color: Colors.red);
               } else {
                 String phonewithcode = selectedCountryCode + _phone.text;
                 log(phonewithcode);
                 Authenticate().sendOtp(phone: phonewithcode, context);
               }
-              // try {
-              //   // if (_phone.text.isNotEmpty) {
-              //   // Authenticate().authenticate(phone: _phone.text, context);
-              //   log('dhb');
-              //   // }
-              // } on PlatformException catch (e) {
-              //   displaySnackBar(context, content: e.message, color: Colors.red);
-              //   log(e.message ?? '');
-              // } catch (e) {
-              //   log('asdasd');
-              //   log(e.toString());
-              // }
             },
             child: Align(
               child: Text(

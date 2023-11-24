@@ -4,6 +4,7 @@ import 'package:chat_app/config/routes/route.dart';
 import 'package:chat_app/core/constants/key.dart';
 import 'package:chat_app/core/utils/snackbar.dart';
 import 'package:chat_app/features/authentication/presentation/bloc/cubit/otp_cubit_cubit.dart';
+import 'package:chat_app/features/homepage/data/repository/searchnumber.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,14 +28,14 @@ class Authenticate {
               .signInWithCredential(credential)
               .then((UserCredential userCredential) {
             navigatorKey.currentState?.pushNamed(Routes.homeScreen,
-                arguments: [false, false, '', '']);
+                arguments: [false, false, '', '', '']);
           }).catchError((e) {
             throw (e);
           });
           completer.complete(true);
         },
         verificationFailed: (FirebaseAuthException authException) {
-          displaySnackBar(context,
+          displaySnackBar(
               content: (authException.message)?.split('.').first,
               color: Colors.red);
           log(authException.message ?? '');
@@ -95,7 +96,7 @@ class OtpVerfication {
   late PhoneAuthCredential credential;
 
   void verification(BuildContext context,
-      {String? code, String? verificationId}) {
+      {String? code, String? verificationId, String? number}) {
     final smsCode = code;
 
     if (smsCode?.isEmpty ?? false) {
@@ -114,20 +115,31 @@ class OtpVerfication {
       FirebaseAuth auth = FirebaseAuth.instance;
       auth
           .signInWithCredential(credential)
-          .then((UserCredential userCredential) {
+          .then((UserCredential userCredential) async {
+        //check if the user with the phone number already exists
+        SearchNumberResult? searchResult =
+            await SearchNumber().getData(number: number);
+        log(searchResult?.userFound.toString() ?? '');
+        if (searchResult?.userFound == true) {
+          navigatorKey.currentState?.pushReplacementNamed(Routes.homeScreen,
+              arguments: [false, false, '', '', '']);
+          displaySnackBar(
+            color: Colors.red,
+            content: 'User already Exists',
+          );
+          return 'User already Exists';
+        }
         navigatorKey.currentState?.pushNamedAndRemoveUntil(
-          Routes.homeScreen,
-          arguments: [false, false, '', ''],
-          (route) => false,
-        );
+            Routes.registerScreen, (route) => false,
+            arguments: number);
       }).catchError((e) {
         if (e is FirebaseAuthException) {
-          displaySnackBar(context, content: e.message, color: Colors.red);
-          // Navigator.of(context).pop();
+          displaySnackBar(content: e.message, color: Colors.red);
           log(e.message ?? '');
         } else {
           log(e);
         }
+        return null;
       });
     } catch (e) {
       log(e.toString());

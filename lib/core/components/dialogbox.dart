@@ -40,7 +40,7 @@ Future<void> dialogDisplay(BuildContext context, PhoneAuthCredential credential,
                         ?.pushReplacementNamed(Routes.otpScreen);
                   }).catchError((e) {
                     if (e is FirebaseAuthException) {
-                      displaySnackBar(context, content: e.message);
+                      displaySnackBar(content: e.message);
                       navigatorKey.currentState?.pop();
                       log(e.message ?? '');
                     }

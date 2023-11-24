@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
-void displaySnackBar(BuildContext context, {String? content, Color? color}) {
-  ScaffoldMessenger.of(context).showSnackBar(
+void displaySnackBar({String? content, Color? color}) {
+  GlobalKey<ScaffoldMessengerState> scaffoldKey =
+      GlobalKey<ScaffoldMessengerState>();
+  scaffoldKey.currentState?.showSnackBar(
     SnackBar(
       content: Text(
         content ?? ' ',

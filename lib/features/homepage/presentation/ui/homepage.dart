@@ -4,13 +4,12 @@ import 'package:chat_app/config/routes/route.dart';
 import 'package:chat_app/core/constants/key.dart';
 import 'package:chat_app/features/homepage/presentation/cubit/cubit/homepage_cubit_cubit.dart';
 import 'package:chat_app/features/homepage/presentation/ui/components/dialog.dart';
+import 'package:chat_app/features/homepage/presentation/ui/components/options.dart';
 import 'package:chat_app/features/homepage/presentation/ui/components/usercard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomePage extends StatefulWidget {
-  // final bool isSearch;
-  // final bool? userIdAvailable;
   final List? arg;
   const HomePage({super.key, this.arg});
 
@@ -23,6 +22,9 @@ class _HomePageState extends State<HomePage> {
   late bool userIdAvailable;
   late String title;
   late String subTitle;
+  late String image;
+
+  String _selectedValue = '1';
 
   @override
   void initState() {
@@ -33,13 +35,15 @@ class _HomePageState extends State<HomePage> {
 
         userIdAvailable = widget.arg?[1];
         title = widget.arg?[2];
-        subTitle = widget.arg?[2];
+        subTitle = widget.arg?[3];
+        image = widget.arg?[4];
       });
     } else {
       isSearch = false;
       userIdAvailable = false;
       title = '';
       subTitle = '';
+      image = '';
     }
   }
 
@@ -55,13 +59,37 @@ class _HomePageState extends State<HomePage> {
         leading: IconButton(
             onPressed: () {
               navigatorKey.currentState?.pushReplacementNamed(Routes.homeScreen,
-                  arguments: [false, false, '', '']);
+                  arguments: [false, false, '', '', '']);
             },
             icon: const Icon(Icons.home)),
         title: const Text('Chat App'),
         actions: [
           IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert)),
+          PopupMenuButton<String>(
+            onSelected: (String value) {
+              setState(() {
+                _selectedValue = value;
+              });
+            },
+            position: PopupMenuPosition.under,
+            elevation: 0.8,
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem(
+                value: '1',
+                child: PopUpItemOptions(
+                  icon: Icons.person,
+                  text: 'Profile',
+                ),
+              ),
+              const PopupMenuItem(
+                value: '2',
+                child: PopUpItemOptions(
+                  icon: Icons.logout_outlined,
+                  text: 'Logout',
+                ),
+              ),
+            ],
+          )
         ],
         elevation: 0.8,
       ),
@@ -78,6 +106,7 @@ class _HomePageState extends State<HomePage> {
                     itemCount: 1,
                     itemBuilder: (context, index) {
                       return UserCard(
+                        file: image,
                         title: title,
                         subtitle: subTitle,
                       );

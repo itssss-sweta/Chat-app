@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:chat_app/core/constants/colors.dart';
 import 'package:chat_app/core/constants/edgeinset.dart';
 import 'package:chat_app/core/constants/textstyle.dart';
-import 'package:chat_app/features/authentication/domain/repository/authenticate.dart';
+import 'package:chat_app/features/authentication/data/repository/authenticate.dart';
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 
@@ -100,6 +100,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 context,
                 code: codeController.text,
                 verificationId: widget.verificationId,
+                number: widget.phone,
               );
               codeController.clear();
             },

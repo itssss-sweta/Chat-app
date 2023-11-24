@@ -1,6 +1,7 @@
 import 'package:chat_app/config/routes/route.dart';
 import 'package:chat_app/features/authentication/presentation/ui/login.dart';
 import 'package:chat_app/features/authentication/presentation/ui/otp.dart';
+import 'package:chat_app/features/authentication/presentation/ui/register.dart';
 import 'package:chat_app/features/chatpage/presentation/ui/chatpage.dart';
 import 'package:chat_app/features/homepage/presentation/ui/homepage.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,7 @@ class AppRoute {
       case Routes.chatScreen:
         {
           return MaterialPageRoute(
-            builder: (context) => const ChatPage(),
+            builder: (context) => ChatPage(title: argument as String),
           );
         }
       case Routes.homeScreen:
@@ -46,6 +47,12 @@ class AppRoute {
         {
           return MaterialPageRoute(
             builder: (context) => const OtpScreen(),
+          );
+        }
+      case Routes.registerScreen:
+        {
+          return MaterialPageRoute(
+            builder: (context) => RegisterScreen(phone: argument as String),
           );
         }
       default:

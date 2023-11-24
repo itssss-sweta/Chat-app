@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:chat_app/core/utils/filepicker.dart';
 import 'package:chat_app/features/chatpage/presentation/ui/components/navbarcontainer.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({super.key});
+  final String title;
+  const ChatPage({super.key, required this.title});
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -20,16 +22,18 @@ class _ChatPageState extends State<ChatPage> {
 
   late WebSocketChannel channel;
 
-  Future<void> pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowCompression: true,
-      allowedExtensions: ["jpg", "png", "jpeg"],
-      allowMultiple: true,
-      onFileLoading: (value) {
-        return const CircularProgressIndicator();
-      },
-    );
+  Future<void> pickImage() async {
+    // FilePickerResult? result = await FilePicker.platform.pickFiles(
+    //   type: FileType.custom,
+    //   allowCompression: true,
+    //   allowedExtensions: ["jpg", "png", "jpeg"],
+    //   allowMultiple: true,
+    //   onFileLoading: (value) {
+    //     return const CircularProgressIndicator();
+    //   },
+    // );
+    var result = await pickFile();
+
     log(result?.files.first.toString() ?? '');
     if (result != null) {
       setState(() {
@@ -92,7 +96,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Hii'),
+        title: Text(widget.title),
         backgroundColor: Colors.green.shade500,
         elevation: 0.2,
       ),

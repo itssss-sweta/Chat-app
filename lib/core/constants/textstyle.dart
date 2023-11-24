@@ -36,3 +36,8 @@ TextStyle hintStyle = TextStyle(
   fontWeight: FontWeight.w300,
   color: hinttextColor,
 );
+TextStyle hintStylesmall = TextStyle(
+  fontSize: 15,
+  fontWeight: FontWeight.w300,
+  color: hinttextColor,
+);

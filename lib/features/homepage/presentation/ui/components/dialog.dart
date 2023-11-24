@@ -1,9 +1,13 @@
+import 'dart:developer';
+
 import 'package:chat_app/core/constants/key.dart';
 import 'package:chat_app/features/homepage/presentation/cubit/cubit/homepage_cubit_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 void displayDialogBox(BuildContext context) {
+  String countryCode = '+977';
+
   TextEditingController? controller = TextEditingController();
   showDialog(
     context: context,
@@ -47,11 +51,14 @@ void displayDialogBox(BuildContext context) {
         actions: [
           TextButton(
             onPressed: () async {
-              //TODO: fix this on cubit
-              context.read<HomepageCubitCubit>().searchNumber();
+              //fix this on cubit--> fixed
+              log('$countryCode${controller.text}');
+              String num = countryCode + controller.text;
+              context.read<HomepageCubitCubit>().searchNumber(number: num);
 
-              // bool isUserFound =
+              // var isUserFound =
               //     await SearchNumber().getData(number: controller.text);
+              // log(isUserFound.toString());
             },
             child: const Text(
               'Ok',
