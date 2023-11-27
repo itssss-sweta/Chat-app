@@ -12,7 +12,7 @@ class StoreUserData {
       await users.doc(number).set(
           {'name': name, 'number': number, 'photo': imagePath, "about": bio});
       navigatorKey.currentState?.pushReplacementNamed(Routes.homeScreen,
-          arguments: [false, false, '', '', '']);
+          arguments: [false, false, '', '', '', '']);
       return 'success';
     } catch (e) {
       return 'Error adding user';

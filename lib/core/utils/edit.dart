@@ -12,8 +12,13 @@ import 'package:flutter/material.dart';
 class EditWidget extends StatefulWidget {
   final String? phone;
   final String? title;
+  // final String? desc;
 
-  const EditWidget({super.key, this.phone, this.title});
+  const EditWidget({
+    super.key,
+    this.phone,
+    this.title,
+  });
 
   @override
   State<EditWidget> createState() => _EditWidgetState();
@@ -28,7 +33,6 @@ class _EditWidgetState extends State<EditWidget> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     fetchExistingData();
   }
@@ -40,6 +44,7 @@ class _EditWidgetState extends State<EditWidget> {
       if (searched?.userFound == true) {
         Map<String, dynamic> searchMap =
             searched?.userData as Map<String, dynamic>;
+        log(searchMap.toString());
 
         _desc.text = searchMap["about"];
         _name.text = searchMap["name"];

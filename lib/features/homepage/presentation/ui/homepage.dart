@@ -6,6 +6,8 @@ import 'package:chat_app/features/homepage/presentation/cubit/cubit/homepage_cub
 import 'package:chat_app/features/homepage/presentation/ui/components/dialog.dart';
 import 'package:chat_app/features/homepage/presentation/ui/components/options.dart';
 import 'package:chat_app/features/homepage/presentation/ui/components/usercard.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -23,8 +25,7 @@ class _HomePageState extends State<HomePage> {
   late String title;
   late String subTitle;
   late String image;
-
-  String _selectedValue = '1';
+  late String ownNum;
 
   @override
   void initState() {
@@ -37,6 +38,7 @@ class _HomePageState extends State<HomePage> {
         title = widget.arg?[2];
         subTitle = widget.arg?[3];
         image = widget.arg?[4];
+        ownNum = widget.arg?[5];
       });
     } else {
       isSearch = false;
@@ -44,6 +46,7 @@ class _HomePageState extends State<HomePage> {
       title = '';
       subTitle = '';
       image = '';
+      ownNum = '';
     }
   }
 
@@ -53,23 +56,41 @@ class _HomePageState extends State<HomePage> {
     log(userIdAvailable.toString());
     log(title);
     log(subTitle);
+    log(image);
+    if (image.contains('File:')) {
+      image = image.replaceAll("File: ''", "");
+      log(image);
+    }
+    // String imagePath = '';
+    // if (imagePathList.length >= 2) {
+    //   imagePath = imagePathList[1].trim();
+    //   imagePath = imagePath.replaceAll("'", "");
+    //   log(imagePath.toString());
+    // }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green.shade500,
         leading: IconButton(
             onPressed: () {
               navigatorKey.currentState?.pushReplacementNamed(Routes.homeScreen,
-                  arguments: [false, false, '', '', '']);
+                  arguments: [false, false, '', '', '', ownNum]);
             },
             icon: const Icon(Icons.home)),
         title: const Text('Chat App'),
         actions: [
           IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
           PopupMenuButton<String>(
-            onSelected: (String value) {
-              setState(() {
-                _selectedValue = value;
-              });
+            onSelected: (String value) async {
+              if (value == '1') {
+                navigatorKey.currentState
+                    ?.pushNamed(Routes.profileScreen, arguments: ownNum);
+              }
+              if (value == '2') {
+                await FirebaseAuth.instance.signOut();
+                navigatorKey.currentState
+                    ?.pushReplacementNamed(Routes.loginScreen);
+              }
             },
             position: PopupMenuPosition.under,
             elevation: 0.8,
@@ -115,18 +136,30 @@ class _HomePageState extends State<HomePage> {
                 : const Center(
                     child: Text('No User Found'),
                   )
-            : ListView.builder(
-                itemCount: 16,
-                padding: const EdgeInsets.only(top: 10),
-                physics: const BouncingScrollPhysics(),
-                itemBuilder: (context, index) {
-                  return const UserCard(
-                    date: 'Date',
-                    subtitle: 'Subtitle',
-                    title: 'Title',
+            : StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .limit(5)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                  return ListView.builder(
+                    itemCount: snapshot.data?.docs.length,
+                    padding: const EdgeInsets.only(top: 10),
+                    physics: const BouncingScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      return UserCard(
+                        date: 'Date',
+                        subtitle: snapshot.data?.docs[index].toString(),
+                        title: 'Title',
+                      );
+                    },
                   );
-                },
-              );
+                });
       }),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

@@ -9,6 +9,7 @@ class TextFieldRegister extends StatelessWidget {
   final TextInputType type;
   final String? Function(String?)? error;
   final bool? readOnly;
+  final int? maxLength;
 
   const TextFieldRegister(
       {super.key,
@@ -17,7 +18,8 @@ class TextFieldRegister extends StatelessWidget {
       required this.title,
       required this.type,
       this.error,
-      this.readOnly});
+      this.readOnly,
+      this.maxLength});
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +38,7 @@ class TextFieldRegister extends StatelessWidget {
           controller: controller,
           style: headSmallStyle,
           keyboardType: type,
-          maxLength: 10,
+          maxLength: maxLength,
           readOnly: readOnly ?? false,
           cursorHeight: BorderSide.strokeAlignCenter,
           decoration: InputDecoration(

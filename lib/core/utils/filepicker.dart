@@ -8,7 +8,6 @@ Future<FilePickerResult?> pickFile() async {
     type: FileType.custom,
     allowCompression: true,
     allowedExtensions: ["jpg", "png", "jpeg"],
-    allowMultiple: true,
     onFileLoading: (value) {
       return const CircularProgressIndicator();
     },

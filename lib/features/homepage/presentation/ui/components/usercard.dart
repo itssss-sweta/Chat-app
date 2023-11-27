@@ -31,8 +31,12 @@ class _UserCardState extends State<UserCard> {
         child: ListTile(
           leading: CircleAvatar(
               child: ClipOval(
-            child: Image.file(File(widget.file ?? '')),
-          )),
+                  child: (widget.file?.isNotEmpty ?? false)
+                      ? Image.file(
+                          File(widget.file ?? ''),
+                          fit: BoxFit.cover,
+                        )
+                      : const Icon(Icons.person))),
           title: Text(widget.title ?? ''),
           subtitle: Text(
             widget.subtitle ?? '',

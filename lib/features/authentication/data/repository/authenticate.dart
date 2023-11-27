@@ -28,7 +28,7 @@ class Authenticate {
               .signInWithCredential(credential)
               .then((UserCredential userCredential) {
             navigatorKey.currentState?.pushNamed(Routes.homeScreen,
-                arguments: [false, false, '', '', '']);
+                arguments: [false, false, '', '', '', '']);
           }).catchError((e) {
             throw (e);
           });
@@ -122,7 +122,7 @@ class OtpVerfication {
         log(searchResult?.userFound.toString() ?? '');
         if (searchResult?.userFound == true) {
           navigatorKey.currentState?.pushReplacementNamed(Routes.homeScreen,
-              arguments: [false, false, '', '', '']);
+              arguments: [false, false, '', '', '', number]);
           displaySnackBar(
             color: Colors.red,
             content: 'User already Exists',
