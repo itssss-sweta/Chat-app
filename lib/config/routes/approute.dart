@@ -59,7 +59,7 @@ class AppRoute {
       case Routes.profileScreen:
         {
           return MaterialPageRoute(
-            builder: (context) => const ProfileScreen(),
+            builder: (context) => ProfileScreen(phone: argument as String),
           );
         }
       default:

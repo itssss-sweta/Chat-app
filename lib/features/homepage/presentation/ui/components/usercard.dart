@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:chat_app/config/routes/route.dart';
 import 'package:chat_app/core/constants/key.dart';
 import 'package:flutter/material.dart';
@@ -32,9 +30,34 @@ class _UserCardState extends State<UserCard> {
           leading: CircleAvatar(
               child: ClipOval(
                   child: (widget.file?.isNotEmpty ?? false)
-                      ? Image.file(
-                          File(widget.file ?? ''),
-                          fit: BoxFit.cover,
+                      ? Image.network(
+                          widget.file ?? '',
+                          fit: BoxFit.contain,
+                          width: 100,
+                          height: 100,
+                          cacheHeight: 100,
+                          cacheWidth: 100,
+                          loadingBuilder: (BuildContext ctx, Widget child,
+                              ImageChunkEvent? loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes !=
+                                            null &&
+                                        loadingProgress.expectedTotalBytes !=
+                                            null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, object, stackTrace) {
+                            return const Icon(
+                              Icons.account_circle,
+                              size: 35,
+                            );
+                          },
                         )
                       : const Icon(Icons.person))),
           title: Text(widget.title ?? ''),

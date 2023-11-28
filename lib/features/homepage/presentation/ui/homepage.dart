@@ -1,7 +1,8 @@
 import 'dart:developer';
-
 import 'package:chat_app/config/routes/route.dart';
 import 'package:chat_app/core/constants/key.dart';
+import 'package:chat_app/features/authentication/presentation/bloc/cubit/otp_cubit_cubit.dart';
+import 'package:chat_app/features/homepage/data/repository/searchnumber.dart';
 import 'package:chat_app/features/homepage/presentation/cubit/cubit/homepage_cubit_cubit.dart';
 import 'package:chat_app/features/homepage/presentation/ui/components/dialog.dart';
 import 'package:chat_app/features/homepage/presentation/ui/components/options.dart';
@@ -25,11 +26,16 @@ class _HomePageState extends State<HomePage> {
   late String title;
   late String subTitle;
   late String image;
-  late String ownNum;
+  String getNumber = '';
+  String passNum = '';
 
   @override
   void initState() {
     super.initState();
+    getNumber = checkUser();
+    var readCubit = context.read<OtpCubitCubit>();
+    readCubit.setPhoneNumber(getNumber);
+    passNum = readCubit.number ?? '';
     if (widget.arg != null) {
       setState(() {
         isSearch = widget.arg?[0];
@@ -37,8 +43,7 @@ class _HomePageState extends State<HomePage> {
         userIdAvailable = widget.arg?[1];
         title = widget.arg?[2];
         subTitle = widget.arg?[3];
-        image = widget.arg?[4];
-        ownNum = widget.arg?[5];
+        image = widget.arg?[4] ?? '';
       });
     } else {
       isSearch = false;
@@ -46,7 +51,23 @@ class _HomePageState extends State<HomePage> {
       title = '';
       subTitle = '';
       image = '';
-      ownNum = '';
+    }
+  }
+
+  String checkUser() {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    User? user = auth.currentUser;
+
+    if (user != null) {
+      String uid = user.uid;
+      String phoneNum = user.phoneNumber ?? 'No email available';
+      SearchNumber().getData(number: phoneNum);
+
+      log('User is logged in with UID: $uid and Email: $phoneNum');
+      return phoneNum;
+    } else {
+      log('No user is currently logged in.');
+      return '';
     }
   }
 
@@ -61,12 +82,6 @@ class _HomePageState extends State<HomePage> {
       image = image.replaceAll("File: ''", "");
       log(image);
     }
-    // String imagePath = '';
-    // if (imagePathList.length >= 2) {
-    //   imagePath = imagePathList[1].trim();
-    //   imagePath = imagePath.replaceAll("'", "");
-    //   log(imagePath.toString());
-    // }
 
     return Scaffold(
       appBar: AppBar(
@@ -74,43 +89,13 @@ class _HomePageState extends State<HomePage> {
         leading: IconButton(
             onPressed: () {
               navigatorKey.currentState?.pushReplacementNamed(Routes.homeScreen,
-                  arguments: [false, false, '', '', '', ownNum]);
+                  arguments: [false, false, '', '', '']);
             },
             icon: const Icon(Icons.home)),
         title: const Text('Chat App'),
         actions: [
           IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
-          PopupMenuButton<String>(
-            onSelected: (String value) async {
-              if (value == '1') {
-                navigatorKey.currentState
-                    ?.pushNamed(Routes.profileScreen, arguments: ownNum);
-              }
-              if (value == '2') {
-                await FirebaseAuth.instance.signOut();
-                navigatorKey.currentState
-                    ?.pushReplacementNamed(Routes.loginScreen);
-              }
-            },
-            position: PopupMenuPosition.under,
-            elevation: 0.8,
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem(
-                value: '1',
-                child: PopUpItemOptions(
-                  icon: Icons.person,
-                  text: 'Profile',
-                ),
-              ),
-              const PopupMenuItem(
-                value: '2',
-                child: PopUpItemOptions(
-                  icon: Icons.logout_outlined,
-                  text: 'Logout',
-                ),
-              ),
-            ],
-          )
+          MenuWidget(number: passNum),
         ],
         elevation: 0.8,
       ),
@@ -138,13 +123,19 @@ class _HomePageState extends State<HomePage> {
                   )
             : StreamBuilder(
                 stream: FirebaseFirestore.instance
-                    .collection('users')
+                    .collection('Users')
                     .limit(5)
                     .snapshots(),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
+                  log(snapshot.data?.docs.toString() ?? '');
+                  if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
                       child: CircularProgressIndicator(),
+                    );
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(
+                      child: Text('No data available'),
                     );
                   }
                   return ListView.builder(
@@ -152,10 +143,22 @@ class _HomePageState extends State<HomePage> {
                     padding: const EdgeInsets.only(top: 10),
                     physics: const BouncingScrollPhysics(),
                     itemBuilder: (context, index) {
+                      var userData = snapshot.data!.docs[index].data();
+
+                      var title = userData['name'] ?? '';
+                      var subtitle = userData['number'] ?? '';
+                      // Replace 'image' with the field name in your Firestore document
+                      var image = userData['photo'] ?? '';
+                      if (image.contains('File:')) {
+                        image = image.replaceAll("File: ''", "");
+                        log(image);
+                      }
+                      var date = userData['date'] ?? '';
                       return UserCard(
-                        date: 'Date',
-                        subtitle: snapshot.data?.docs[index].toString(),
-                        title: 'Title',
+                        date: date,
+                        subtitle: subtitle,
+                        title: title,
+                        file: image,
                       );
                     },
                   );

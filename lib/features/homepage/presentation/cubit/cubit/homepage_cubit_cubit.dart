@@ -32,7 +32,7 @@ class HomepageCubitCubit extends Cubit<HomepageCubitState> {
 
         //path conflict if Routes.homeScreen as navigating from same screen, so Routes.homeScreen2 created
         ModalRoute.withName('/'),
-        arguments: [true, true, name, num, image, ''],
+        arguments: [true, true, name, num, image],
       );
     } else {
       navigatorKey.currentState?.pushNamedAndRemoveUntil(
@@ -40,7 +40,7 @@ class HomepageCubitCubit extends Cubit<HomepageCubitState> {
 
         //path conflict if Routes.homeScreen as navigating from same screen, so Routes.homeScreen2 created
         ModalRoute.withName('/'),
-        arguments: [true, false, '', '', '', ''],
+        arguments: [true, false, '', '', ''],
       );
     }
     emit(HomepageCubitInitial());

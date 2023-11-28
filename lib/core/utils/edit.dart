@@ -1,13 +1,13 @@
 import 'dart:developer';
-import 'dart:io';
 import 'package:chat_app/core/constants/edgeinset.dart';
 import 'package:chat_app/core/constants/textstyle.dart';
-import 'package:chat_app/core/utils/filepicker.dart';
 import 'package:chat_app/core/utils/snackbar.dart';
 import 'package:chat_app/features/authentication/data/repository/user_store.dart';
+import 'package:chat_app/features/authentication/presentation/bloc/cubit/otp_cubit_cubit.dart';
 import 'package:chat_app/features/authentication/presentation/ui/textfield.dart';
 import 'package:chat_app/features/homepage/data/repository/searchnumber.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class EditWidget extends StatefulWidget {
   final String? phone;
@@ -28,18 +28,21 @@ class _EditWidgetState extends State<EditWidget> {
   final TextEditingController _name = TextEditingController();
   final TextEditingController _number = TextEditingController();
   final TextEditingController _desc = TextEditingController();
-  late String? imagePath = '';
+  late String imagePath = '';
   final GlobalKey<FormState> _key = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
+    log(imagePath);
+    imagePath = context.read<OtpCubitCubit>().imagePath ?? '';
+
     fetchExistingData();
   }
 
   void fetchExistingData() async {
     SearchNumberResult? searched =
-        await SearchNumber().getData(number: _number.text);
+        await SearchNumber().getData(number: widget.phone);
     if (searched?.userFound != null && searched?.userData != null) {
       if (searched?.userFound == true) {
         Map<String, dynamic> searchMap =
@@ -52,8 +55,9 @@ class _EditWidgetState extends State<EditWidget> {
         imagePath = searchMap["photo"];
       }
     } else {
+      log(widget.phone ?? '');
       _desc.text = '';
-      _number.text = _number.text;
+      _number.text = widget.phone ?? '';
       _name.text = '';
       imagePath = '';
     }
@@ -62,6 +66,8 @@ class _EditWidgetState extends State<EditWidget> {
   @override
   Widget build(BuildContext context) {
     _number.text = widget.phone ?? '';
+    var readCubit = context.read<OtpCubitCubit>();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title ?? ''),
@@ -76,11 +82,10 @@ class _EditWidgetState extends State<EditWidget> {
                   bio: _desc.text,
                   name: _name.text,
                   number: _number.text,
-                  imagePath: imagePath.toString(),
+                  photo: imagePath,
                 )
                     .then((value) {
                   log(value);
-
                   displaySnackBar(color: Colors.green, content: value);
                 });
               }
@@ -104,25 +109,51 @@ class _EditWidgetState extends State<EditWidget> {
               children: [
                 GestureDetector(
                   onTap: () async {
-                    var result = await pickFile();
-
-                    log(result?.files.first.toString() ?? '');
-                    if (result != null) {
+                    readCubit.getImagePath();
+                    var path = readCubit.imagePath;
+                    log(readCubit.imagePath ?? '');
+                    if (path != null && (path.isNotEmpty)) {
                       setState(() {
-                        imagePath = result.files.first.path ?? '';
+                        imagePath = path;
                       });
                     }
                   },
                   child: CircleAvatar(
                     maxRadius: 50,
                     backgroundColor: Colors.green.shade50,
-                    child: (imagePath != null)
+                    child: ((imagePath.isNotEmpty) &&
+                            !(imagePath.contains('File:')))
                         ? ClipOval(
-                            child: Image.file(
-                              File(imagePath ?? ''),
+                            child: Image.network(
+                              imagePath,
                               width: 100,
                               height: 100,
-                              fit: BoxFit.cover,
+                              fit: BoxFit.contain,
+                              cacheHeight: 100,
+                              cacheWidth: 100,
+                              loadingBuilder: (BuildContext ctx, Widget child,
+                                  ImageChunkEvent? loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes !=
+                                                null &&
+                                            loadingProgress
+                                                    .expectedTotalBytes !=
+                                                null
+                                        ? loadingProgress
+                                                .cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                        : null,
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, object, stackTrace) {
+                                return const Icon(
+                                  Icons.account_circle,
+                                  size: 35,
+                                );
+                              },
                             ),
                           )
                         : Icon(

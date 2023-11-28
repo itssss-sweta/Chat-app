@@ -16,8 +16,7 @@ class Authenticate {
   late PhoneAuthCredential credential;
   String _verificationId = '';
   int? _resendToken;
-  Future<void> sendOtp(BuildContext context,
-      {String? phone, String? code}) async {
+  Future<void> sendOtp(BuildContext context, {String? phone}) async {
     var completer = Completer<bool>();
     try {
       await _auth.verifyPhoneNumber(
@@ -27,8 +26,8 @@ class Authenticate {
           _auth
               .signInWithCredential(credential)
               .then((UserCredential userCredential) {
-            navigatorKey.currentState?.pushNamed(Routes.homeScreen,
-                arguments: [false, false, '', '', '', '']);
+            navigatorKey.currentState
+                ?.pushNamed(Routes.registerScreen, arguments: phone);
           }).catchError((e) {
             throw (e);
           });
@@ -54,14 +53,6 @@ class Authenticate {
                     child: CircularProgressIndicator(),
                   );
                 }
-
-                //     return OtpScreen(
-                //       verificationId: _verificationId,
-                //       resentToken: _resendToken,
-                //       phone: phone,
-                //     );
-                //   },
-                // ),
                 return BlocBuilder<OtpCubitCubit, OtpCubitState>(
                   builder: (context, state) {
                     if (state is OtpLoadingState) {
@@ -119,19 +110,21 @@ class OtpVerfication {
         //check if the user with the phone number already exists
         SearchNumberResult? searchResult =
             await SearchNumber().getData(number: number);
-        log(searchResult?.userFound.toString() ?? '');
+        log('searchResultUserFound?:${searchResult?.userFound.toString() ?? ''}');
         if (searchResult?.userFound == true) {
           navigatorKey.currentState?.pushReplacementNamed(Routes.homeScreen,
-              arguments: [false, false, '', '', '', number]);
+              arguments: [false, false, '', '', '']);
           displaySnackBar(
             color: Colors.red,
             content: 'User already Exists',
           );
           return 'User already Exists';
         }
+        log(number ?? '');
         navigatorKey.currentState?.pushNamedAndRemoveUntil(
-            Routes.registerScreen, (route) => false,
-            arguments: number);
+          Routes.registerScreen,
+          (route) => false,
+        );
       }).catchError((e) {
         if (e is FirebaseAuthException) {
           displaySnackBar(content: e.message, color: Colors.red);

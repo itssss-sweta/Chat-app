@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
-import 'package:chat_app/core/utils/filepicker.dart';
+import 'package:http/http.dart' as http;
+import 'package:chat_app/features/authentication/presentation/bloc/cubit/otp_cubit_cubit.dart';
 import 'package:chat_app/features/chatpage/presentation/ui/components/navbarcontainer.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class ChatPage extends StatefulWidget {
@@ -16,9 +16,12 @@ class ChatPage extends StatefulWidget {
   State<ChatPage> createState() => _ChatPageState();
 }
 
+//TODO: use of firebase instead of websockets
+
 class _ChatPageState extends State<ChatPage> {
   List<Message> messages = [];
   String currentMessage = '';
+  String? image;
 
   TextEditingController message = TextEditingController();
   ScrollController _scrollController = ScrollController();
@@ -35,28 +38,30 @@ class _ChatPageState extends State<ChatPage> {
     //     return const CircularProgressIndicator();
     //   },
     // );
-    var result = await pickFile();
-
+    var cubitread = context.read<OtpCubitCubit>();
+    cubitread.getImagePath();
+    var result = cubitread.imagePath;
     // log(result?.files.toString() ?? '');
     if (result != null) {
-      setState(() {
-        messages.addAll(result.files.map((file) {
-          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-          return Message(type: MessageType.image, content: file);
-        }).toList());
-        // log(messages.toString());
-      });
       if (messages.isNotEmpty && messages.last.content != null) {
-        File imageFile =
-            File((messages.last.content as PlatformFile).path ?? '');
-        List<int> imageBytes = await imageFile.readAsBytes();
-
+        final response = await http.get(Uri.parse(result));
+        final List<int> imageBytes = response.bodyBytes;
         // Encode the image bytes to base64
         String base64Image = base64Encode(imageBytes);
         // log(base64Image);
 
         // Send the base64-encoded image data
         channel.sink.add(base64Image);
+        setState(() {
+          // messages.addAll(result
+          //   ..map((file) {
+          //     _scrollController
+          //         .jumpTo(_scrollController.position.maxScrollExtent);
+          //     return Message(type: MessageType.image, content: file);
+          //   }).toList());
+          messages.add(Message(type: MessageType.image, content: result));
+          // log(messages.toString());
+        });
       }
     }
   }
@@ -148,18 +153,36 @@ class _ChatPageState extends State<ChatPage> {
                   //     fileExtension.endsWith('.png')) {
                   // Display text message
                   if (currentMessageIndex.type == MessageType.image) {
-                    log((currentMessageIndex.content as PlatformFile).path ??
-                        "");
+                    log((currentMessageIndex.content));
                     return BubbleNormalImage(
-                        id: currentMessageIndex.content.hashCode.toString(),
-                        image: Image.file(
-                          File(
-                            (currentMessageIndex.content as PlatformFile)
-                                    .path ??
-                                "",
-                          ),
-                          color: Colors.green.shade50,
-                        ));
+                      id: currentMessageIndex.content.hashCode.toString(),
+                      image: Image.network(
+                        currentMessageIndex.content,
+                        cacheHeight: 200,
+                        height: 200,
+                        loadingBuilder: (BuildContext ctx, Widget child,
+                            ImageChunkEvent? loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes !=
+                                          null &&
+                                      loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, object, stackTrace) {
+                          return const Icon(
+                            Icons.account_circle,
+                            size: 35,
+                          );
+                        },
+                      ),
+                      color: Colors.green.shade50,
+                    );
                     // Padding(
                     //   padding: const EdgeInsets.all(8.0),
                     //   child: Container(

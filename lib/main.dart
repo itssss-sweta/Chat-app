@@ -3,7 +3,6 @@ import 'package:chat_app/config/routes/approute.dart';
 import 'package:chat_app/core/constants/key.dart';
 import 'package:chat_app/features/authentication/presentation/bloc/cubit/otp_cubit_cubit.dart';
 import 'package:chat_app/features/authentication/presentation/ui/login.dart';
-import 'package:chat_app/features/homepage/data/repository/searchnumber.dart';
 import 'package:chat_app/features/homepage/presentation/cubit/cubit/homepage_cubit_cubit.dart';
 import 'package:chat_app/features/homepage/presentation/ui/homepage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -28,28 +27,12 @@ void main() async {
       runApp(ChatApp(
         user: user,
       ));
-      checkUser();
+
       log('User is signed out');
+      log(user?.phoneNumber ?? '');
     });
   } catch (e) {
     log('Firebase initialization failed:$e');
-  }
-
-  // await SharedPreferences.getInstance();
-}
-
-void checkUser() async {
-  FirebaseAuth auth = FirebaseAuth.instance;
-  User? user = auth.currentUser;
-
-  if (user != null) {
-    String uid = user.uid;
-    String phoneNum = user.phoneNumber ?? 'No email available';
-    SearchNumber().getData(number: phoneNum);
-
-    log('User is logged in with UID: $uid and Email: $phoneNum');
-  } else {
-    log('No user is currently logged in.');
   }
 }
 
@@ -71,9 +54,8 @@ class ChatApp extends StatelessWidget {
       child: MaterialApp(
         onGenerateRoute: AppRoute().ongenerateRoute,
         home: user != null
-            ? const HomePage(arg: [false, false, '', '', '', ''])
+            ? const HomePage(arg: [false, false, '', '', ''])
             : const LoginScreen(),
-        // home: const ChatPage(title: 'Sweta'),
         navigatorKey: navigatorKey,
       ),
     );

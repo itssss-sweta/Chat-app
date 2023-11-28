@@ -1,9 +1,11 @@
 import 'dart:developer';
+import 'package:chat_app/features/authentication/presentation/bloc/cubit/otp_cubit_cubit.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:chat_app/core/constants/colors.dart';
 import 'package:chat_app/core/constants/edgeinset.dart';
 import 'package:chat_app/core/constants/textstyle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/repository/authenticate.dart';
 import '../../../../core/utils/snackbar.dart';
 
@@ -26,6 +28,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var loginCubit = context.read<OtpCubitCubit>();
+    String number = '';
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
@@ -48,8 +52,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     content: 'Please enter your number', color: Colors.red);
               } else {
                 String phonewithcode = selectedCountryCode + _phone.text;
-                log(phonewithcode);
-                Authenticate().sendOtp(phone: phonewithcode, context);
+                loginCubit.setPhoneNumber(phonewithcode);
+                number = loginCubit.number ?? '';
+                log(loginCubit.number ?? '');
+                Authenticate().sendOtp(phone: number, context);
               }
             },
             child: Align(
